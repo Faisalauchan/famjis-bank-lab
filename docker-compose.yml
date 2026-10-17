@@ -1,0 +1,30 @@
+services:
+  web:
+    build: ./web
+    environment:
+      # each student runs with their own matric number -> unique flags
+      STUDENT_ID: "${STUDENT_ID:-DEMO}"
+      SECRET_SALT: "icdfa_int406_salt_change_me"
+      ADMIN_PASS: "S3cretAdmin_pw!"      # used by the bot; students never see it
+    ports:
+      # host port is configurable (default 8081, since Burp's proxy usually
+      # holds 8080); override with WEB_PORT if you want a different one.
+      - "${WEB_PORT:-8081}:80"
+    volumes:
+      - labdata:/var/www/data
+
+  adminbot:
+    build: ./adminbot
+    environment:
+      TARGET: "http://web"
+      ADMIN_USER: "admin"
+      ADMIN_PASS: "S3cretAdmin_pw!"
+      INTERVAL_MS: "30000"
+    extra_hosts:
+      # lets the admin bot reach a listener on the student's host (Linux)
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - web
+
+volumes:
+  labdata:
