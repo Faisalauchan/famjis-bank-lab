@@ -8,10 +8,23 @@ $tx = db()->prepare("SELECT * FROM txns WHERE user_id = ? ORDER BY tdate DESC, i
 $tx->execute([$u['uid']]);
 $txns = $tx->fetchAll();
 $token = $_COOKIE['token'] ?? '(sign in again)';
+$isAdmin = ($u['role'] ?? '') === 'admin';
 page_head('Overview');
 ?>
-<h1>Good day, <?php echo e(explode(' ', $me['name'])[0]); ?></h1>
-<p class="sub">Here is a snapshot of your account.</p>
+<h1>Good day, <?php echo e(explode(' ', $me['name'])[0]); ?><?php if ($isAdmin): ?> <span class="badge">Administrator</span><?php endif; ?></h1>
+<p class="sub"><?php echo $isAdmin ? 'Administrator overview &mdash; branch tools are available below.' : 'Here is a snapshot of your account.'; ?></p>
+
+<?php if ($isAdmin): ?>
+<div class="card adminbar" style="margin-top:18px">
+  <h2>Administration</h2>
+  <p class="sub">Tools available to branch administrators.</p>
+  <div class="actions" style="margin-top:14px">
+    <a class="action" href="vault.php"><span class="ico">&#128273;</span><span><span class="t">Admin Console</span><span class="d">Branch vault &amp; stats</span></span></a>
+    <a class="action" href="messages.php"><span class="ico">&#128229;</span><span><span class="t">Support queue</span><span class="d">Review customer messages</span></span></a>
+    <a class="action" href="api.php/admin"><span class="ico">&#9881;</span><span><span class="t">Admin API</span><span class="d">Privileged endpoints</span></span></a>
+  </div>
+</div>
+<?php endif; ?>
 
 <div class="cols" style="margin-top:18px">
   <div>
@@ -54,12 +67,14 @@ page_head('Overview');
       </div>
     </div>
 
-    <div class="card">
-      <h2>Developer API access <span class="badge">beta</span></h2>
-      <p class="sub">Your personal bearer token for the FAMJIS account API.</p>
-      <pre style="white-space:pre-wrap;word-break:break-all"><?php echo e($token); ?></pre>
-      <p class="sub">Try: <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/api/user/<?php echo (int)$me['id']; ?></code></p>
-    </div>
+    <details class="devapi" id="devapi">
+      <summary>Developer API access <span class="badge">beta</span></summary>
+      <div class="inner">
+        <p class="sub">Your personal bearer token for the FAMJIS account API.</p>
+        <pre style="white-space:pre-wrap;word-break:break-all"><?php echo e($token); ?></pre>
+        <p class="sub">Try: <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/api/user/<?php echo (int)$me['id']; ?></code></p>
+      </div>
+    </details>
   </div>
 </div>
 <?php page_foot();

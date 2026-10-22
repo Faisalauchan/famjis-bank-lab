@@ -17,6 +17,10 @@ async function visit() {
   });
   try {
     const page = await browser.newPage();
+    // Stored XSS payloads may open alert()/confirm()/prompt() dialogs, which
+    // otherwise block headless Chromium forever. Auto-dismiss so the bot keeps
+    // running (a real admin browser would just show-and-close the dialog).
+    page.on('dialog', d => d.dismiss().catch(() => {}));
     await page.goto(`${TARGET}/login.php`, { waitUntil: 'networkidle2' });
     await page.type('input[name="username"]', USER);
     await page.type('input[name="password"]', PASS);
@@ -24,8 +28,11 @@ async function visit() {
       page.click('button[type="submit"]'),
       page.waitForNavigation({ waitUntil: 'networkidle2' }),
     ]);
-    // view the messages where customer payloads are stored
-    await page.goto(`${TARGET}/messages.php`, { waitUntil: 'networkidle2' });
+    // view the messages where customer payloads are stored. Use
+    // 'domcontentloaded' (not 'networkidle2') — a payload that opens a slow or
+    // hanging connection (image beacon, fetch to an unreachable host) would
+    // keep the network from ever going idle and stall the visit.
+    await page.goto(`${TARGET}/messages.php`, { waitUntil: 'domcontentloaded' });
     await sleep(4000); // give injected scripts time to fire
     console.log(new Date().toISOString(), 'admin visited messages.php');
   } catch (e) {

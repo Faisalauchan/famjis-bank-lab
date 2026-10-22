@@ -100,22 +100,30 @@ function page_head($title, $chrome = true) {
   echo "<div class='wrap'>";
 }
 function page_foot() {
+  $u = current_user();
   echo "</div><footer class='foot'>FAMJIS BANK &middot; Member FDIC-style demo &middot; "
-     . "<span class='warn'>Training environment, not a real bank. Do not deploy publicly.</span></footer>";
+     . "<span class='warn'>Training environment, not a real bank. Do not deploy publicly.</span>";
+  // Developer API access lives discreetly in the footer (not on the main dashboard).
+  if ($u) echo " &middot; <a class='devlink' href='dashboard.php#devapi'>Developer API</a>";
+  echo "</footer>";
   echo "</body></html>";
 }
 function topbar() {
   $u = current_user();
-  echo "<header class='topbar'><div class='bar'>";
-  echo "<a class='brand' href='dashboard.php'><span class='logo'>FB</span><span>FAMJIS <b>BANK</b></span></a>";
+  $isAdmin = $u && ($u['role'] ?? '') === 'admin';
+  echo "<header class='topbar" . ($isAdmin ? ' admin' : '') . "'><div class='bar'>";
+  echo "<a class='brand' href='dashboard.php'><span class='logo'>FB</span><span>FAMJIS <b>BANK</b></span>"
+     . ($isAdmin ? "<span class='admintag'>Admin</span>" : "") . "</a>";
   echo "<nav class='navlinks'>";
   echo "<a href='dashboard.php'>Overview</a><a href='account.php'>Accounts</a>";
   echo "<a href='messages.php'>Support</a><a href='upload.php'>Documents</a>";
+  if ($isAdmin) echo "<a class='adminnav' href='vault.php'>Admin Console</a>";
   echo "</nav>";
   if ($u) {
     $initials = strtoupper(substr(trim($u['name']), 0, 1));
-    echo "<div class='userbox'><span class='avatar'>$initials</span>";
+    echo "<div class='userbox'><span class='avatar" . ($isAdmin ? ' admin' : '') . "'>$initials</span>";
     echo "<span class='uname'>" . e($u['name']) . "</span>";
+    if ($isAdmin) echo "<span class='role'>Administrator</span>";
     echo "<a class='logout' href='logout.php'>Sign out</a></div>";
   } else {
     echo "<div class='userbox'><a class='logout' href='login.php'>Sign in</a></div>";
@@ -191,5 +199,29 @@ pre{font-family:Consolas,monospace;background:#0f1a15;color:#d9efe2;padding:14px
 .drop{border:2px dashed #bcd0c6;border-radius:12px;padding:30px;text-align:center;color:var(--muted);background:#fafcfb}
 .notice{border-radius:10px;padding:12px 15px;font-size:14px;margin-bottom:14px}
 .notice.ok{background:#e3f4ea;color:#0b5d3b}.notice.err{background:#fbe9e9;color:#9b2c2c}
+/* ---- admin chrome (visibly distinct from a normal customer) ---- */
+.topbar.admin{background:linear-gradient(135deg,#0a1f16,var(--green-d));border-bottom:3px solid var(--gold)}
+.topbar.admin .navlinks a{color:#cbe0d4}
+.admintag{margin-left:9px;background:var(--gold);color:var(--green-d);font-size:10px;font-weight:800;
+padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;vertical-align:middle}
+.navlinks a.adminnav{background:var(--gold);color:var(--green-d);font-weight:700}
+.navlinks a.adminnav:hover{background:var(--gold-l);color:var(--green-d)}
+.avatar.admin{background:var(--gold);box-shadow:0 0 0 2px var(--gold-l)}
+.role{color:var(--gold-l);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+border:1px solid rgba(200,162,74,.5);padding:2px 8px;border-radius:20px}
+.adminbar{background:linear-gradient(135deg,#0a1f16,var(--green-d));color:#fff;border:0}
+.adminbar h2{color:var(--gold-l)}
+.adminbar .sub{color:#bcd3c7}
+.adminbar .action{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
+.adminbar .action:hover{border-color:var(--gold)}
+.adminbar .action .t{color:#fff}.adminbar .action .d{color:#bcd3c7}
+.adminbar .ico{background:rgba(200,162,74,.2);color:var(--gold-l)}
+details.devapi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0;margin-bottom:20px;box-shadow:0 1px 3px rgba(20,36,28,.05)}
+details.devapi>summary{cursor:pointer;list-style:none;padding:16px 22px;font-size:14px;font-weight:600;color:var(--muted)}
+details.devapi>summary::-webkit-details-marker{display:none}
+details.devapi>summary::before{content:'\\25B8';margin-right:8px;color:var(--green)}
+details.devapi[open]>summary::before{content:'\\25BE'}
+details.devapi>.inner{padding:0 22px 20px}
+a.devlink{color:var(--muted)}
 CSS;
 }
